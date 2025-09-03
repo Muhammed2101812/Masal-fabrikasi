@@ -18,11 +18,8 @@ export async function POST(request: NextRequest) {
     // Get AI client
     const geminiClient = getGeminiClient();
     
-    // Create a prompt for image generation
-    const imagePrompt = `Lütfen ${category} kategorisine uygun, aşağıdaki hikaye için bir kapak görseli oluştur: "${story.substring(0, 100)}..."`;
-    
     // Generate image
-    const base64Image = await geminiClient.generateImage(imagePrompt);
+    const base64Image = await geminiClient.generateImage();
     
     return new Response(
       JSON.stringify({ coverImage: base64Image }),

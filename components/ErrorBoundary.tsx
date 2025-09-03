@@ -10,18 +10,16 @@ interface ErrorBoundaryProps {
 
 export default function ErrorBoundary({ children }: ErrorBoundaryProps) {
   const [hasError, setHasError] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+
 
   useEffect(() => {
     const handleUnhandledError = (event: ErrorEvent) => {
       setHasError(true);
-      setError(event.error);
       Sentry.captureException(event.error);
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       setHasError(true);
-      setError(event.reason);
       Sentry.captureException(event.reason);
     };
 

@@ -55,7 +55,7 @@ export default function App() {
     const [error, setError] = useState<string | null>(null);
     const [story, setStory] = useState<Story | null>(null);
     const [imageUrl, setImageUrl] = useState('');
-    const [copySuccess, setCopySuccess] = useState('');
+
 
     // TTS state
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
@@ -131,9 +131,9 @@ export default function App() {
           storyLength: fullText.length
         });
 
-            } catch (err: any) {
+            } catch (err: unknown) {
         console.error('TTS Error:', err);
-        const errorMessage = err.message || "Seslendirme sırasında bir hata oluştu.";
+        const errorMessage = (err instanceof Error ? err.message : "Seslendirme sırasında bir hata oluştu.");
         
         // Check if it's an API key configuration error
         if (errorMessage.includes('API anahtarı yapılandırılmamış') || errorMessage.includes('API anahtarınızı kontrol edin')) {
@@ -166,34 +166,7 @@ export default function App() {
   };
 
   // --- API Functions ---
-    async function fetchWithBackoff(url: string, payload: any, maxRetries = 3) {
-        let delay = 1000;
-        for (let i = 0; i < maxRetries; i++) {
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
 
-                if (!response.ok) {
-          if (response.status === 429) {
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2;
-                        continue;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                if (i === maxRetries - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2;
-            }
-        }
-    }
 
     async function generateStoryViaAPI(userPrompt: string, currentAge: string, currentCategory: string, currentLength: string) {
         const response = await fetch('/api/generate-story', {
@@ -268,15 +241,11 @@ export default function App() {
         if (story) {
             const fullText = [story.title, ...story.paragraphs].join('\n\n');
             navigator.clipboard.writeText(fullText).then(() => {
-                setCopySuccess('Kopyalandı!');
-                setTimeout(() => setCopySuccess(''), 2000);
-                
                 analytics.track('story_copied', { 
                     storyLength: fullText.length
                 });
             }, () => {
-                setCopySuccess('Hata!');
-                setTimeout(() => setCopySuccess(''), 2000);
+                console.error('Failed to copy text');
             });
         }
     };
@@ -292,7 +261,7 @@ export default function App() {
         setError(null);
         setStory(null);
         setImageUrl('');
-        setCopySuccess('');
+
 
     // Reset previous audio state
     if (audio) {
@@ -326,8 +295,8 @@ export default function App() {
                 setImageUrl(placeholderUrl);
             }
 
-        } catch (err: any) {
-      setError(err.message || "Bilinmeyen bir hata oluştu");
+        } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : "Bilinmeyen bir hata oluştu"));
             console.error(err);
         } finally {
             setLoading(false);

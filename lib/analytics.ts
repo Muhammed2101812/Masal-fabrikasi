@@ -6,7 +6,7 @@ type EventType = 'page_view' | 'story_generated' | 'tts_played' | 'story_copied'
 interface AnalyticsEvent {
   type: EventType;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 class PrivacyFirstAnalytics {
@@ -14,7 +14,7 @@ class PrivacyFirstAnalytics {
   private maxEvents = 100;
 
   // Track an event
-  track(type: EventType, metadata?: Record<string, any>) {
+  track(type: EventType, metadata?: Record<string, string | number | boolean>) {
     // In a real implementation, you would send this to your analytics server
     // For privacy-first approach, we only collect anonymous, non-personal data
     

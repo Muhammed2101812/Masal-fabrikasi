@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 ${userPrompt}`);
     
     // Safety check
-    const { isSafe, sanitizedContent } = postCheck(rawStory);
+    const { isSafe } = postCheck(rawStory);
     
     let finalStory = rawStory;
     if (!isSafe) {

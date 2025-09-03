@@ -8,12 +8,14 @@ import { Plus_Jakarta_Sans, Chewy } from "next/font/google";
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-plus-jakarta-sans",
+  display: 'swap',
 });
 
 const chewy = Chewy({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-chewy",
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -29,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=optional" rel="stylesheet" />
       </head>
       <body className={`${plusJakartaSans.variable} ${chewy.variable}`} style={{ fontFamily: 'var(--font-plus-jakarta-sans), sans-serif' }}>
         <ErrorBoundary>

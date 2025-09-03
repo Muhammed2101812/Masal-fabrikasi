@@ -51,10 +51,10 @@ Hikayeyi şu formatta yaz:
     
     throw new Error('API yanıtından geçerli bir hikaye metni alınamadı.');
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Story Generation Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Hikaye oluşturulurken bir hata oluştu.' }, 
+      { error: (error instanceof Error ? error.message : 'Hikaye oluşturulurken bir hata oluştu.') }, 
       { status: 500 }
     );
   }

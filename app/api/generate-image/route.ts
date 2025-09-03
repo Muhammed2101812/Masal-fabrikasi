@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, category } = await request.json();
+    const { prompt } = await request.json();
 
     if (!process.env.GEMINI_API_KEY) {
       throw new Error("Gemini API key is not configured.");
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
       throw new Error(`API request failed with status: ${response.status}`);
     }
 
-    if (!response.ok) {
-      throw new Error(`API request failed after retries with status: ${response.status}`);
+    if (!response || !response.ok) {
+      throw new Error(`API request failed after retries with status: ${response?.status || 'unknown'}`);
     }
 
     const result = await response.json();
@@ -66,7 +66,18 @@ export async function POST(request: NextRequest) {
     console.log('Gemini API Response:', JSON.stringify(result, null, 2));
 
     // Parse response using the same format as the working example
-    const base64Data = result?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
+    interface ApiResponse {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            inlineData?: {
+              data?: string;
+            };
+          }>;
+        };
+      }>;
+    }
+    const base64Data = (result as ApiResponse)?.candidates?.[0]?.content?.parts?.find((p) => p.inlineData)?.inlineData?.data;
     
     // Debug: Log if no data found
     if (!base64Data) {
@@ -82,21 +93,22 @@ export async function POST(request: NextRequest) {
     
     throw new Error('API yanıtından geçerli bir görsel verisi alınamadı.');
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Image Generation Error:', error);
     
     // Provide more specific error messages
     let errorMessage = 'Görsel oluşturulurken bir hata oluştu.';
     let statusCode = 500;
     
-    if (error.message.includes('503')) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    if (errorMsg.includes('503')) {
       errorMessage = 'Görsel oluşturma servisi şu anda yoğun. Lütfen daha sonra tekrar deneyin.';
       statusCode = 503;
-    } else if (error.message.includes('API key is not configured')) {
+    } else if (errorMsg.includes('API key is not configured')) {
       errorMessage = 'Görsel oluşturma API anahtarı yapılandırılmamış.';
       statusCode = 500;
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else if (errorMsg) {
+      errorMessage = errorMsg;
     }
     
     return NextResponse.json(

@@ -37,23 +37,24 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'audio/mpeg' },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('TTS Route Error:', error);
     
     // Provide more specific error messages
     let errorMessage = 'Ses üretimi sırasında bir hata oluştu.';
     let statusCode = 500;
     
-    if (error.message === "ElevenLabs API key is not configured.") {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    if (errorMsg === "ElevenLabs API key is not configured.") {
       errorMessage = "ElevenLabs API anahtarı yapılandırılmamış. Lütfen .env.local dosyasında ELEVENLABS_API_KEY değişkenini ayarlayın.";
       statusCode = 500;
-    } else if (error.message.includes('API request failed with status:')) {
-      const statusMatch = error.message.match(/status: (\d+)/);
+    } else if (errorMsg.includes('API request failed with status:')) {
+      const statusMatch = errorMsg.match(/status: (\d+)/);
       const status = statusMatch ? statusMatch[1] : 'unknown';
       errorMessage = `ElevenLabs API hatası (HTTP ${status}). API anahtarınızı kontrol edin.`;
       statusCode = 500;
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else if (errorMsg) {
+      errorMessage = errorMsg;
     }
     
     return new NextResponse(JSON.stringify({ error: errorMessage }), { status: statusCode });
