@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary-color: #13a4ec;
+  --secondary-color: #ffc107;
+  --accent-color: #ff6f61;
 }
 
 @theme inline {
@@ -23,4 +26,25 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Speed control icons */
+.icon-turtle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23617c89' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-turtle'%3E%3Cpath d='M2 13.06c0-1.7.3-3.3 1-4.7C4.4 6.36 6.8 4 12 4s7.6 2.36 9 4.36c.7 1.4 1 3 1 4.72 0 4.3-3.5 8.7-10 8.7S2 17.36 2 13.06zM2 13h20M7 8v2M12 8v2M17 8v2'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.icon-rabbit {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23111618' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-rabbit'%3E%3Cpath d='M13 10c0-2.21-1.79-4-4-4S5 7.79 5 10v4h8v-4zM20 8c0-1.1-.9-2-2-2s-2 .9-2 2v4h4v-4zM16 14v2M16 10v2M16 6v2M18 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2zM5 14h8'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.icon-cheetah {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23617c89' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-cheetah'%3E%3Cpath d='M10 14.5c-4.69 0-8.5-3.81-8.5-8.5S5.31 2.5 10 2.5s8.5 3.81 8.5 8.5-3.81 8.5-8.5 8.5zM20.5 10.5h-10M15.5 10.5V5M5.5 10.5V5M10.5 20.5v-10'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.icon-turtle.active {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23111618' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-turtle'%3E%3Cpath d='M2 13.06c0-1.7.3-3.3 1-4.7C4.4 6.36 6.8 4 12 4s7.6 2.36 9 4.36c.7 1.4 1 3 1 4.72 0 4.3-3.5 8.7-10 8.7S2 17.36 2 13.06zM2 13h20M7 8v2M12 8v2M17 8v2'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.icon-cheetah.active {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23111618' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-cheetah'%3E%3Cpath d='M10 14.5c-4.69 0-8.5-3.81-8.5-8.5S5.31 2.5 10 2.5s8.5 3.81 8.5 8.5-3.81 8.5-8.5 8.5zM20.5 10.5h-10M15.5 10.5V5M5.5 10.5V5M10.5 20.5v-10'%3E%3C/path%3E%3C/svg%3E");
 }
