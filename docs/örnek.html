@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yapay Zeka Hikaye Oluşturucu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-3xl">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Hayal Et ve Oku</h1>
+            <p class="text-slate-500 mt-2">Aklındaki fikri yaz, sana özel bir hikaye ve resim oluşturalım!</p>
+        </div>
+
+        <!-- Prompt Input Form -->
+        <div class="space-y-4">
+            <textarea id="prompt-input" class="w-full h-24 p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow resize-none" placeholder="Örnek: Ay'a seyahat eden cesur bir sincap..."></textarea>
+            <button id="generate-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:scale-100">
+                <span id="btn-text">Hikaye Oluştur</span>
+            </button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loader" class="text-center my-8 hidden">
+            <svg class="animate-spin h-10 w-10 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="http://www.w3.org/2000/svg">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-slate-500 mt-4">Harika bir hikaye ve resim hazırlanıyor, lütfen bekleyin...</p>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container" class="mt-8 space-y-6 hidden">
+            <!-- Generated Image -->
+            <div id="image-wrapper">
+                 <img id="story-image" src="" alt="Hikaye için oluşturulan görsel" class="w-full h-auto max-h-[500px] object-cover rounded-xl shadow-lg border-4 border-white">
+            </div>
+            <!-- Generated Story -->
+            <div id="story-wrapper" class="bg-slate-50 p-6 rounded-lg">
+                <p id="story-text" class="text-slate-700 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+        </div>
+        
+        <!-- Error Message Box -->
+        <div id="error-box" class="mt-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative hidden" role="alert">
+          <strong class="font-bold">Bir Hata Oluştu!</strong>
+          <span id="error-message" class="block sm:inline"></span>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM elementlerini seçme
+        const promptInput = document.getElementById('prompt-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const loader = document.getElementById('loader');
+        const resultsContainer = document.getElementById('results-container');
+        const storyImage = document.getElementById('story-image');
+        const storyText = document.getElementById('story-text');
+        const errorBox = document.getElementById('error-box');
+        const errorMessage = document.getElementById('error-message');
+
+        // --- BURAYA KENDİ API ANAHTARINIZI YAPIŞTIRIN ---
+        // Google AI Studio'dan aldığınız API anahtarını aşağıdaki tırnak işaretlerinin arasına ekleyin.
+        const apiKey = "AIzaSyA3ztKpnlSLtzf5jFUocZNCTCv4zpkYuDg"; 
+
+        /**
+         * API isteklerini artan gecikmelerle yeniden deneyen bir yardımcı fonksiyon.
+         */
+        async function fetchWithBackoff(url, payload, maxRetries = 3) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Hatası: ${errorData.error?.message || response.statusText}`);
+                    }
+                    return await response.json();
+
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    console.warn(`API isteği başarısız oldu. ${delay / 1000}s içinde yeniden denenecek...`, error.message);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        /**
+         * Kullanıcının girdisine göre bir görsel oluşturan fonksiyon. (ALTERNATİF MODEL KULLANILIYOR)
+         */
+        async function generateImage(userPrompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+            const imagePrompt = `Çocuk kitabı için çizilmiş, renkli, sevimli ve fantastik bir illüstrasyon: ${userPrompt}`;
+            const payload = {
+                contents: [{
+                    parts: [{ text: imagePrompt }]
+                }],
+                generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE']
+                },
+            };
+
+            const result = await fetchWithBackoff(apiUrl, payload);
+            const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+            if (base64Data) {
+                return `data:image/png;base64,${base64Data}`;
+            }
+            throw new Error('API yanıtından geçerli bir görsel verisi alınamadı.');
+        }
+
+        /**
+         * Kullanıcının girdisine göre bir çocuk hikayesi yazan fonksiyon.
+         */
+        async function generateStory(userPrompt) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const storyPrompt = `Aşağıdaki fikirle ilgili kısa, basit ve iç ısıtan bir çocuk hikayesi yaz. Hikaye en fazla 4-5 paragraf olsun ve Türkçe dilinde yazılsın: "${userPrompt}"`;
+            
+            const payload = { contents: [{ role: "user", parts: [{ text: storyPrompt }] }] };
+
+            const result = await fetchWithBackoff(apiUrl, payload);
+            if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                return result.candidates[0].content.parts[0].text;
+            }
+            throw new Error('API yanıtından geçerli bir hikaye metni alınamadı.');
+        }
+
+        // Hata mesajını gösteren fonksiyon
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorBox.classList.remove('hidden');
+        }
+
+        // Oluşturma butonuna tıklandığında çalışacak ana fonksiyon
+        generateBtn.addEventListener('click', async () => {
+            if (!apiKey) {
+                showError('Lütfen kodun içine geçerli bir API anahtarı ekleyin.');
+                return;
+            }
+            const userPrompt = promptInput.value.trim();
+            if (!userPrompt) {
+                showError('Lütfen bir hikaye fikri yazın.');
+                return;
+            }
+
+            // Arayüzü yükleme durumuna getir
+            generateBtn.disabled = true;
+            loader.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            errorBox.classList.add('hidden');
+
+            try {
+                // Görsel ve hikaye oluşturma işlemlerini aynı anda başlat
+                const [imageUrl, storyContent] = await Promise.all([
+                    generateImage(userPrompt),
+                    generateStory(userPrompt)
+                ]);
+
+                storyImage.src = imageUrl;
+                storyText.innerText = storyContent;
+                
+                resultsContainer.classList.remove('hidden');
+                resultsContainer.classList.add('fade-in');
+
+            } catch (error) {
+                console.error('Detaylı Hata:', error);
+                showError(error.message);
+                resultsContainer.classList.add('hidden');
+            } finally {
+                generateBtn.disabled = false;
+                loader.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
